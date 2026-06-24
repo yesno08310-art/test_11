@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌈 우리 반 출석체크</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "맑은 고딕", sans-serif;
+    background: linear-gradient(135deg, #fff7ad, #b8f7ff);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.app {
+    width: 100%;
+    max-width: 500px;
+    background: white;
+    border-radius: 25px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+h1 {
+    text-align: center;
+    color: #ff7a00;
+    margin-bottom: 20px;
+}
+
+.summary {
+    background: #fff7ed;
+    border-radius: 15px;
+    padding: 15px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.notice {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.student {
+    background: #f0f9ff;
+    border-radius: 15px;
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.student-info {
+    flex: 1;
+}
+
+.student-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.status {
+    margin-top: 5px;
+    font-weight: bold;
+}
+
+.present {
+    color: #16a34a;
+}
+
+.late {
+    color: #f59e0b;
+}
+
+.absent {
+    color: #dc2626;
+}
+
+.waiting {
+    color: #888;
+}
+
+.time {
+    font-size: 13px;
+    color: #555;
+}
+
+.buttons {
+    display: flex;
+    gap: 5px;
+}
+
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+}
+
+.attend-btn {
+    background: #22c55e;
+}
+
+.attend-btn:hover {
+    background: #16a34a;
+}
+
+.absent-btn {
+    background: #ef4444;
+}
+
+.absent-btn:hover {
+    background: #dc2626;
+}
+
+.reset-btn {
+    width: 100%;
+    margin-top: 15px;
+    background: #6366f1;
+    padding: 12px;
+    font-size: 16px;
+}
+
+.reset-btn:hover {
+    background: #4f46e5;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+    <h1>🌈 우리 반 출석체크 📚</h1>
+
+    <div class="summary">
+        ✅ 출석: <span id="presentCount">0</span>명 |
+        ⏰ 지각: <span id="lateCount">0</span>명 |
+        ❌ 결석: <span id="absentCount">0</span>명
+    </div>
+
+    <div class="notice">
+        ⏰ 오전 9시 45분 이후 출석은 자동으로 지각 처리됩니다.
+    </div>
+
+    <div id="studentList"></div>
+
+    <button class="reset-btn" onclick="resetAttendance()">
+        🔄 출석 초기화
+    </button>
+</div>
+
+<script>
+// 학생 명단
+const students = [
+    "김민준",
+    "이서연",
+    "박지호",
+    "최하은",
+    "정도윤",
+    "한유진",
+    "강서준",
+    "윤지우"
+];
+
+// 출석 데이터
+const attendance = {};
+
+function markAttendance(name, action) {
+
+    const now = new Date();
+
+    const time = now.toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+    // 오전 9시 45분 기준
+    const deadline = new Date();
+    deadline.setHours(9, 45, 0, 0);
+
+    let status = action;
+
+    // 출석 버튼을 눌렀고 9:45 이후면 지각
+    if (action === "present" && now > deadline) {
+        status = "late";
+    }
+
+    attendance[name] = {
+        status,
+        time: action === "absent" ? "-" : time
+    };
+
+    renderStudents();
+}
+
+function renderStudents() {
+
+    const studentList = document.getElementById("studentList");
+    studentList.innerHTML = "";
+
+    students.forEach(name => {
+
+        const data = attendance[name];
+
+        let statusText = "대기중 💤";
+        let statusClass = "waiting";
+        let timeText = "";
+
+        if (data) {
+
+            if (data.status === "present") {
+                statusText = "출석 완료 ✅";
+                statusClass = "present";
+                timeText = data.time;
+            }
+
+            if (data.status === "late") {
+                statusText = "지각 ⏰";
+                statusClass = "late";
+                timeText = data.time;
+            }
+
+            if (data.status === "absent") {
+                statusText = "결석 ❌";
+                statusClass = "absent";
+                timeText = "-";
+            }
+        }
+
+        const div = document.createElement("div");
+        div.className = "student";
+
+        div.innerHTML = `
+            <div class="student-info">
+                <div class="student-name">😊 ${name}</div>
+                <div class="status ${statusClass}">
+                    ${statusText}
+                </div>
+                <div class="time">
+                    ${timeText ? "기록 시간 : " + timeText : ""}
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="attend-btn"
+                    onclick="markAttendance('${name}','present')">
+                    출석
+                </button>
+
+                <button class="absent-btn"
+                    onclick="markAttendance('${name}','absent')">
+                    결석
+                </button>
+            </div>
+        `;
+
+        studentList.appendChild(div);
+    });
+
+    updateCounts();
+}
+
+function updateCounts() {
+
+    let present = 0;
+    let late = 0;
+    let absent = 0;
+
+    Object.values(attendance).forEach(student => {
+
+        if (student.status === "present") {
+            present++;
+        }
+
+        if (student.status === "late") {
+            late++;
+        }
+
+        if (student.status === "absent") {
+            absent++;
+        }
+    });
+
+    document.getElementById("presentCount").textContent = present;
+    document.getElementById("lateCount").textContent = late;
+    document.getElementById("absentCount").textContent = absent;
+}
+
+function resetAttendance() {
+
+    if (!confirm("정말 초기화할까요?")) {
+        return;
+    }
+
+    Object.keys(attendance).forEach(key => {
+        delete attendance[key];
+    });
+
+    renderStudents();
+}
+
+// 최초 화면 출력
+renderStudents();
+</script>
+
+</body>
+</html>
