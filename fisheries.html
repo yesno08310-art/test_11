@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>어업 생산량 현황 대시보드</title>
+  <style>
+    :root {
+      --bg:#f3f5f8;
+      --paper:#ffffff;
+      --ink:#1f2937;
+      --muted:#667085;
+      --line:#d6dae2;
+      --navy:#17365d;
+      --navy2:#23476f;
+      --blue:#2f6fad;
+      --gold:#b7791f;
+      --green:#236b5e;
+      --red:#b42318;
+      --soft:#f8fafc;
+      --radius:6px;
+      --shadow:0 8px 20px rgba(31,41,55,.06);
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family:"Noto Sans KR", "Malgun Gothic", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+      line-height:1.45;
+    }
+    body::before {
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(90deg, rgba(23,54,93,.035) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(23,54,93,.025) 1px, transparent 1px);
+      background-size:42px 42px;
+    }
+    header {
+      position:relative;
+      background:#fff;
+      border-bottom:4px solid var(--navy);
+      box-shadow:0 2px 10px rgba(0,0,0,.04);
+    }
+    .top-strip {
+      height:38px;
+      background:var(--navy);
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      font-size:13px;
+      letter-spacing:.02em;
+    }
+    .hero {
+      max-width:1220px;
+      margin:0 auto;
+      padding:28px clamp(16px,4vw,42px) 24px;
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:18px;
+      align-items:center;
+    }
+    .emblem {
+      width:58px;
+      height:58px;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--navy),#2f6fad);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-weight:900;
+      border:3px solid #e7edf5;
+      box-shadow:0 0 0 1px var(--line);
+    }
+    .kicker { margin:0 0 5px; color:var(--blue); font-size:13px; font-weight:800; }
+    h1 { margin:0; font-size:clamp(25px,3.2vw,38px); letter-spacing:-.035em; color:#111827; }
+    .note { color:var(--muted); font-size:12px; line-height:1.55; }
+    .period {
+      color:var(--navy);
+      background:#f1f5f9;
+      border:1px solid var(--line);
+      border-left:5px solid var(--navy);
+      padding:12px 16px;
+      font-weight:900;
+      white-space:nowrap;
+      min-width:190px;
+      text-align:left;
+    }
+    main { position:relative; max-width:1220px; margin:0 auto; padding:24px clamp(16px,4vw,42px) 52px; }
+    section { margin-top:22px; }
+    .section-title {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:0 0 8px;
+      border-bottom:2px solid var(--navy);
+      margin-bottom:12px;
+    }
+    .section-title h2 {
+      margin:0;
+      font-size:18px;
+      color:var(--navy);
+      letter-spacing:-.02em;
+    }
+    .section-title h2::before { content:"■"; color:var(--navy); margin-right:8px; font-size:13px; }
+    .cards { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; }
+    .card, .panel, .chart-card, .table-wrap {
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .card { padding:16px 16px 14px; border-top:3px solid var(--navy); }
+    .label { color:var(--muted); font-size:13px; font-weight:800; }
+    .value { margin-top:7px; font-size:27px; font-weight:900; letter-spacing:-.03em; color:#111827; }
+    .sub { margin-top:4px; color:var(--muted); font-size:12px; }
+    .filters {
+      display:grid;
+      grid-template-columns:1fr 1.4fr 150px;
+      gap:14px;
+      align-items:end;
+      padding:16px;
+      background:#fbfcfe;
+    }
+    label { display:block; font-size:13px; color:#344054; font-weight:900; margin-bottom:6px; }
+    select, input[type="range"], button { width:100%; }
+    select, button {
+      border:1px solid #b9c2cf;
+      background:#fff;
+      border-radius:4px;
+      padding:10px 11px;
+      font-weight:800;
+      color:var(--ink);
+    }
+    button { cursor:pointer; background:var(--navy); color:#fff; border-color:var(--navy); }
+    button:hover { background:var(--navy2); }
+    .range-row { display:flex; align-items:center; gap:10px; }
+    .range-row input { flex:1; accent-color:var(--navy); }
+    .range-value { min-width:120px; text-align:right; font-weight:900; color:var(--navy); }
+    .table-wrap { overflow:auto; border-radius:var(--radius); }
+    table { width:100%; border-collapse:collapse; min-width:840px; background:#fff; }
+    th, td { padding:11px 13px; text-align:right; border-bottom:1px solid #e7ebf1; border-right:1px solid #eef1f5; }
+    th:first-child, td:first-child { text-align:center; }
+    thead th {
+      position:sticky;
+      top:0;
+      z-index:1;
+      background:#edf2f7;
+      color:#1f3654;
+      font-size:13px;
+      cursor:pointer;
+      user-select:none;
+      border-bottom:2px solid #c8d2df;
+    }
+    tbody tr:nth-child(even) { background:#fafbfc; }
+    tbody tr:hover { background:#eef6ff; }
+    tbody tr.max-year { background:#fff8e8; font-weight:900; outline:2px solid #e6b85c; outline-offset:-2px; }
+    tbody tr.hidden { display:none; }
+    tfoot td { background:var(--navy); color:#fff; font-weight:900; border-color:#2f527a; }
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 9px;
+      border-radius:3px;
+      background:#fff7e6;
+      color:#7a4b00;
+      border:1px solid #ead39a;
+      font-weight:900;
+      font-size:12px;
+    }
+    .charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .chart-card { padding:15px; min-height:344px; }
+    .chart-card.wide { grid-column:1 / -1; }
+    .chart-head { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #e5e7eb; }
+    .chart-head h3 { margin:0; font-size:16px; color:#1f3654; }
+    canvas { display:block; width:100%; height:278px; }
+    .legend { display:flex; flex-wrap:wrap; gap:10px; font-size:12px; color:var(--muted); margin-top:4px; }
+    .dot { width:10px; height:10px; border-radius:2px; display:inline-block; margin-right:5px; }
+    .footer-note {
+      margin-top:22px;
+      padding:12px 14px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      font-size:12px;
+      border-radius:var(--radius);
+    }
+    @media (max-width:960px) {
+      .cards,.charts,.filters { grid-template-columns:1fr; }
+      .chart-card.wide { grid-column:auto; }
+      .hero { grid-template-columns:auto 1fr; }
+      .period { grid-column:1 / -1; }
+    }
+    @media (max-width:560px) {
+      .hero { grid-template-columns:1fr; }
+      .emblem { display:none; }
+      .section-title { align-items:flex-start; flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="top-strip">해양수산부 어업정책과 · 내부 현황 보고용</div>
+    <div class="hero">
+      <div class="emblem">MOF</div>
+      <div>
+        <p class="kicker">어업 생산량 품종별 통계</p>
+        <h1>어업 생산량 현황 대시보드</h1>
+        <p class="note">연도별·품종별 생산량 현황을 업무보고 형식으로 정리했습니다. 단위: 천M/T</p>
+      </div>
+      <div class="period">데이터 기간<br>2001~2013년</div>
+    </div>
+  </header>
+  <main>
+    <section>
+      <div class="section-title"><h2>요약 카드</h2><span class="badge">최고 생산 연도: 2008년</span></div>
+      <div class="cards">
+        <div class="card"><div class="label">전체 총생산량 합계</div><div class="value">38,396</div><div class="sub">2001~2013년 합계</div></div>
+        <div class="card"><div class="label">최고 총생산량</div><div class="value">3,361</div><div class="sub">2008년, 최고 연도 강조</div></div>
+        <div class="card"><div class="label">어류 > 해조류 연도 수</div><div class="value">13</div><div class="sub">전체 13개 연도 기준</div></div>
+        <div class="card"><div class="label">가장 큰 품종 합계</div><div class="value">어류</div><div class="sub">16,849 천M/T</div></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>검색·필터</h2><span class="note">품종과 생산량 범위를 선택하면 표가 필터링되고 선택 품종 열이 강조됩니다.</span></div>
+      <div class="panel filters">
+        <div><label for="speciesFilter">품종 선택 필터</label><select id="speciesFilter"></select></div>
+        <div><label for="rangeFilter">생산량 범위 슬라이더</label><div class="range-row"><input id="rangeFilter" type="range" min="0" max="3361" value="3361" step="1"><span class="range-value" id="rangeValue">0~3,361</span></div></div>
+        <div><label>&nbsp;</label><button id="resetBtn">필터 초기화</button></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>데이터 표</h2><span class="note">연도 헤더를 클릭하면 오름차순/내림차순 정렬됩니다.</span></div>
+      <div class="table-wrap"><table id="dataTable"></table></div>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>시각화</h2><span class="note">2008년 최고 생산 연도는 선 그래프에서 주황색 포인트로 표시됩니다.</span></div>
+      <div class="charts">
+        <div class="panel chart-card wide"><div class="chart-head"><h3>연도별 총 생산량(계) 추이</h3><span class="badge">2008년 강조</span></div><canvas id="lineChart"></canvas></div>
+        <div class="panel chart-card"><div class="chart-head"><h3>품종별 생산량 합계</h3></div><canvas id="barChart"></canvas></div>
+        <div class="panel chart-card"><div class="chart-head"><h3>어류 vs 해조류 비교</h3></div><canvas id="compareChart"></canvas><div class="legend"><span><i class="dot" style="background:#0ea5e9"></i>어류</span><span><i class="dot" style="background:#10b981"></i>해조류</span></div></div>
+      </div>
+    </section>
+    <div class="footer-note">※ 본 화면은 내부 검토 및 보고서 작성 보조용 대시보드입니다. 표의 2008년 행은 총생산량 최고 연도로 강조 표시했습니다.</div>
+  </main>
+<script>
+const DATA = [{"연도": 2001, "계": 2665, "어류": 1467, "패류": 283, "갑각류": 74, "연체동물": 413, "기타수산동물": 39, "해조류": 388}, {"연도": 2002, "계": 2476, "어류": 1202, "패류": 272, "갑각류": 72, "연체동물": 394, "기타수산동물": 27, "해조류": 508}, {"연도": 2003, "계": 2487, "어류": 1144, "패류": 403, "갑각류": 89, "연체동물": 379, "기타수산동물": 15, "해조류": 457}, {"연도": 2004, "계": 2519, "어류": 1157, "패류": 410, "갑각류": 85, "연체동물": 306, "기타수산동물": 15, "해조류": 546}, {"연도": 2005, "계": 2714, "어류": 1265, "패류": 409, "갑각류": 92, "연체동물": 295, "기타수산동물": 16, "해조류": 636}, {"연도": 2006, "계": 3032, "어류": 1261, "패류": 474, "갑각류": 110, "연체동물": 392, "기타수산동물": 17, "해조류": 778}, {"연도": 2007, "계": 3275, "어류": 1330, "패류": 555, "갑각류": 124, "연체동물": 432, "기타수산동물": 23, "해조류": 811}, {"연도": 2008, "계": 3361, "어류": 1448, "패류": 428, "갑각류": 126, "연체동물": 402, "기타수산동물": 23, "해조류": 935}, {"연도": 2009, "계": 3182, "어류": 1425, "패류": 420, "갑각류": 132, "연체동물": 312, "기타수산동물": 24, "해조류": 870}, {"연도": 2010, "계": 3111, "어류": 1331, "패류": 440, "갑각류": 147, "연체동물": 256, "기타수산동물": 22, "해조류": 915}, {"연도": 2011, "계": 3256, "어류": 1356, "패류": 467, "갑각류": 130, "연체동물": 269, "기타수산동물": 28, "해조류": 1007}, {"연도": 2012, "계": 3183, "어류": 1268, "패류": 433, "갑각류": 135, "연체동물": 293, "기타수산동물": 23, "해조류": 1032}, {"연도": 2013, "계": 3135, "어류": 1195, "패류": 346, "갑각류": 149, "연체동물": 282, "기타수산동물": 23, "해조류": 1140}];
+const COLUMNS = ['연도','계','어류','패류','갑각류','연체동물','기타수산동물','해조류'];
+const SPECIES = ['계','어류','패류','갑각류','연체동물','기타수산동물','해조류'];
+const HIGHLIGHT_YEAR = 2008;
+let sortAsc = true;
+let tableRows = [...DATA];
+const colors = { blue:'#2f6fad', teal:'#17365d', green:'#236b5e', orange:'#b7791f', red:'#b42318', slate:'#475569', purple:'#5b5f97', grid:'#d9dee7' };
+const fmt = n => Number(n).toLocaleString('ko-KR');
+function initFilters() {
+  const sel = document.getElementById('speciesFilter');
+  sel.innerHTML = SPECIES.map(s => `<option value="${s}">${s}</option>`).join('');
+  sel.addEventListener('change', applyFilters);
+  document.getElementById('rangeFilter').addEventListener('input', applyFilters);
+  document.getElementById('resetBtn').addEventListener('click', () => { sel.value='계'; document.getElementById('rangeFilter').value=document.getElementById('rangeFilter').max; applyFilters(); });
+}
+function applyFilters() {
+  const species = document.getElementById('speciesFilter').value;
+  const maxVal = Number(document.getElementById('rangeFilter').value);
+  document.getElementById('rangeValue').textContent = `0~${fmt(maxVal)}`;
+  tableRows = DATA.filter(r => r[species] <= maxVal).sort((a,b)=> sortAsc ? a.연도-b.연도 : b.연도-a.연도);
+  renderTable(species);
+}
+function renderTable(highlight='계') {
+  const table = document.getElementById('dataTable');
+  const head = '<thead><tr>' + COLUMNS.map(c => `<th data-col="${c}">${c}${c==='연도' ? (sortAsc?' ▲':' ▼') : ''}</th>`).join('') + '</tr></thead>';
+  const body = '<tbody>' + tableRows.map(r => `<tr class="${r.연도===HIGHLIGHT_YEAR?'max-year':''}">` + COLUMNS.map(c => `<td style="${c===highlight?'font-weight:900;color:#0f766e;background:#ecfdf5;':''}">${c==='연도' ? r[c] : fmt(r[c])}</td>`).join('') + '</tr>').join('') + '</tbody>';
+  const totals = {연도:'합계'}; COLUMNS.slice(1).forEach(c => totals[c] = DATA.reduce((s,r)=>s+r[c],0));
+  const foot = '<tfoot><tr>' + COLUMNS.map(c => `<td>${c==='연도'?'합계':fmt(totals[c])}</td>`).join('') + '</tr></tfoot>';
+  table.innerHTML = head + body + foot;
+  table.querySelector('th[data-col="연도"]').onclick = () => { sortAsc = !sortAsc; applyFilters(); };
+}
+function clearCanvas(canvas) { const ctx=canvas.getContext('2d'); const dpr=window.devicePixelRatio||1; const rect=canvas.getBoundingClientRect(); canvas.width=rect.width*dpr; canvas.height=rect.height*dpr; ctx.scale(dpr,dpr); ctx.clearRect(0,0,rect.width,rect.height); return [ctx, rect.width, rect.height]; }
+function axes(ctx,w,h,pad,min,max) { ctx.strokeStyle=colors.grid; ctx.lineWidth=1; ctx.font='12px system-ui'; ctx.fillStyle='#64748b'; for(let i=0;i<=4;i++) { const y=pad.t+(h-pad.t-pad.b)*i/4; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke(); const val=max-(max-min)*i/4; ctx.fillText(Math.round(val).toLocaleString('ko-KR'),8,y+4); } }
+function drawLine() { const [ctx,w,h]=clearCanvas(document.getElementById('lineChart')); const pad={l:62,r:28,t:18,b:38}; const vals=DATA.map(r=>r.계), min=Math.min(...vals)*0.94, max=Math.max(...vals)*1.03; axes(ctx,w,h,pad,min,max); const x=i=>pad.l+(w-pad.l-pad.r)*i/(DATA.length-1); const y=v=>pad.t+(h-pad.t-pad.b)*(1-(v-min)/(max-min)); ctx.strokeStyle=colors.teal; ctx.lineWidth=3; ctx.beginPath(); DATA.forEach((r,i)=>{ if(i===0)ctx.moveTo(x(i),y(r.계)); else ctx.lineTo(x(i),y(r.계)); }); ctx.stroke(); DATA.forEach((r,i)=>{ ctx.fillStyle=r.연도===HIGHLIGHT_YEAR?colors.orange:colors.teal; ctx.beginPath(); ctx.arc(x(i),y(r.계),r.연도===HIGHLIGHT_YEAR?6:4,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#64748b'; ctx.font='11px system-ui'; if(i%2===0) ctx.fillText(r.연도,x(i)-13,h-12); }); const hi=DATA.find(r=>r.연도===HIGHLIGHT_YEAR); ctx.fillStyle=colors.orange; ctx.font='bold 13px system-ui'; ctx.fillText(`${hi.연도}년 ${fmt(hi.계)}`, x(DATA.indexOf(hi))-34, y(hi.계)-14); }
+function drawBar() { const [ctx,w,h]=clearCanvas(document.getElementById('barChart')); const pad={l:72,r:24,t:18,b:72}; const sums=SPECIES.filter(s=>s!=='계').map(s=>({name:s, value:DATA.reduce((a,r)=>a+r[s],0)})); const max=Math.max(...sums.map(d=>d.value))*1.12; axes(ctx,w,h,pad,0,max); const bw=(w-pad.l-pad.r)/sums.length*.62; sums.forEach((d,i)=>{ const x=pad.l+(w-pad.l-pad.r)*(i+.19)/sums.length; const bh=(h-pad.t-pad.b)*d.value/max; ctx.fillStyle=[colors.blue,colors.teal,colors.orange,colors.purple,colors.red,colors.green][i]; ctx.fillRect(x,h-pad.b-bh,bw,bh); ctx.fillStyle='#334155'; ctx.font='11px system-ui'; ctx.save(); ctx.translate(x+bw/2,h-13); ctx.rotate(-Math.PI/5); ctx.fillText(d.name,-22,0); ctx.restore(); ctx.font='bold 11px system-ui'; ctx.fillText(fmt(d.value),x-5,h-pad.b-bh-7); }); }
+function drawCompare() { const [ctx,w,h]=clearCanvas(document.getElementById('compareChart')); const pad={l:56,r:18,t:18,b:42}; const max=Math.max(...DATA.flatMap(r=>[r.어류,r.해조류]))*1.15; axes(ctx,w,h,pad,0,max); const group=(w-pad.l-pad.r)/DATA.length, bw=group*.32; DATA.forEach((r,i)=>{ const x=pad.l+i*group+group*.16; [['어류',colors.blue],['해조류',colors.green]].forEach((it,j)=>{ const bh=(h-pad.t-pad.b)*r[it[0]]/max; ctx.fillStyle=it[1]; ctx.fillRect(x+j*bw,h-pad.b-bh,bw*.92,bh); }); if(i%2===0){ ctx.fillStyle='#64748b'; ctx.font='10px system-ui'; ctx.fillText(r.연도,x-4,h-14); } }); }
+function drawCharts() { drawLine(); drawBar(); drawCompare(); }
+window.addEventListener('resize', drawCharts);
+initFilters(); applyFilters(); drawCharts();
+</script>
+</body>
+</html>
