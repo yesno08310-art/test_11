@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>오늘의 별자리 운세</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1e3f, #5b4b8a);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .app {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 30px;
+      border-radius: 20px;
+      width: 360px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    input {
+      width: 90%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      margin: 15px 0;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      background: #ffd166;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background: #ffbd33;
+    }
+
+    .result {
+      margin-top: 25px;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 20px;
+      border-radius: 15px;
+      display: none;
+    }
+
+    .zodiac {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .fortune {
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>✨ 오늘의 별자리 운세 ✨</h1>
+    <p>생년월일을 입력하세요</p>
+
+    <input type="date" id="birthdate" />
+    <br />
+    <button onclick="showFortune()">운세 보기</button>
+
+    <div class="result" id="result">
+      <div class="zodiac" id="zodiac"></div>
+      <div class="fortune" id="fortune"></div>
+    </div>
+  </div>
+
+  <script>
+    const fortunes = {
+      "양자리": "오늘은 새로운 도전을 시작하기 좋은 날입니다. 자신감을 가지고 움직여보세요.",
+      "황소자리": "차분하게 계획을 세우면 좋은 결과가 따릅니다. 금전 관리에 신경 써보세요.",
+      "쌍둥이자리": "주변 사람들과의 대화에서 좋은 기회가 생길 수 있습니다.",
+      "게자리": "감정이 예민해질 수 있는 날입니다. 충분한 휴식이 필요합니다.",
+      "사자자리": "당신의 매력이 돋보이는 하루입니다. 적극적으로 표현해보세요.",
+      "처녀자리": "꼼꼼함이 빛나는 날입니다. 미뤄둔 일을 정리하기 좋습니다.",
+      "천칭자리": "사람들과의 균형이 중요합니다. 협력하면 더 좋은 결과가 나옵니다.",
+      "전갈자리": "집중력이 높아지는 하루입니다. 중요한 일에 몰입해보세요.",
+      "사수자리": "새로운 배움이나 여행 계획에 좋은 기운이 있습니다.",
+      "염소자리": "성실함이 보상받는 날입니다. 꾸준히 해온 일이 빛을 볼 수 있습니다.",
+      "물병자리": "창의적인 아이디어가 떠오르는 날입니다. 기록해두면 좋습니다.",
+      "물고기자리": "직감이 잘 맞는 하루입니다. 마음이 끌리는 방향을 믿어보세요."
+    };
+
+    function getZodiac(month, day) {
+      if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return "양자리";
+      if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return "황소자리";
+      if ((month === 5 && day >= 21) || (month === 6 && day <= 21)) return "쌍둥이자리";
+      if ((month === 6 && day >= 22) || (month === 7 && day <= 22)) return "게자리";
+      if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return "사자자리";
+      if ((month === 8 && day >= 23) || (month === 9 && day <= 23)) return "처녀자리";
+      if ((month === 9 && day >= 24) || (month === 10 && day <= 22)) return "천칭자리";
+      if ((month === 10 && day >= 23) || (month === 11 && day <= 22)) return "전갈자리";
+      if ((month === 11 && day >= 23) || (month === 12 && day <= 24)) return "사수자리";
+      if ((month === 12 && day >= 25) || (month === 1 && day <= 19)) return "염소자리";
+      if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return "물병자리";
+      return "물고기자리";
+    }
+
+    function showFortune() {
+      const birthdate = document.getElementById("birthdate").value;
+
+      if (!birthdate) {
+        alert("생년월일을 입력해주세요.");
+        return;
+      }
+
+      const date = new Date(birthdate);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+
+      const zodiac = getZodiac(month, day);
+
+      document.getElementById("zodiac").textContent = `${zodiac}`;
+      document.getElementById("fortune").textContent = fortunes[zodiac];
+      document.getElementById("result").style.display = "block";
+    }
+  </script>
+</body>
+</html>
