@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>유형별 해양사고 현황 대시보드</title>
+  <style>
+    :root {
+      --bg: #f4f6f5;
+      --surface: #ffffff;
+      --surface-soft: #eef5f3;
+      --ink: #172322;
+      --muted: #647371;
+      --line: #d8e2df;
+      --teal: #11756f;
+      --teal-deep: #0f4542;
+      --blue: #315fa8;
+      --coral: #bf5537;
+      --amber: #b98117;
+      --green: #397a47;
+      --shadow: 0 16px 36px rgba(21, 38, 36, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: Arial, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .page-header {
+      color: #ffffff;
+      background:
+        linear-gradient(135deg, rgba(17, 117, 111, 0.96), rgba(38, 91, 82, 0.96)),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 36px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .header-inner,
+    .filter-inner,
+    .dashboard-main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      min-height: 184px;
+      padding: 34px 0 28px;
+    }
+
+    .kicker {
+      margin: 0 0 10px;
+      color: rgba(255, 255, 255, 0.74);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    h1,
+    h2,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin-bottom: 0;
+      font-size: 42px;
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.28;
+      letter-spacing: 0;
+    }
+
+    .period-card {
+      min-width: 184px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .period-card span,
+    .period-card strong {
+      display: block;
+    }
+
+    .period-card span {
+      margin-bottom: 6px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .period-card strong {
+      font-size: 25px;
+      line-height: 1.1;
+    }
+
+    .filter-band {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px);
+    }
+
+    .filter-inner {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(260px, 1.2fr);
+      gap: 14px;
+      padding: 16px 0;
+    }
+
+    .control {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .range-line {
+      display: grid;
+      grid-template-columns: 1fr 54px;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 10px;
+      border: 1px solid #c7d4d1;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--teal);
+    }
+
+    output {
+      color: var(--teal-deep);
+      text-align: right;
+      font-weight: 900;
+    }
+
+    input[type="search"] {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 13px;
+      color: var(--ink);
+      border: 1px solid #c7d4d1;
+      border-radius: 8px;
+      background: #ffffff;
+      outline: none;
+    }
+
+    input[type="search"]:focus,
+    .range-line:focus-within {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(17, 117, 111, 0.14);
+    }
+
+    .dashboard-main {
+      padding: 24px 0 44px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .metric-card,
+    .chart-panel,
+    .table-section {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .metric-card {
+      min-height: 128px;
+      padding: 18px;
+    }
+
+    .metric-card span {
+      display: block;
+      min-height: 18px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .metric-card strong {
+      display: block;
+      color: var(--teal-deep);
+      font-size: 32px;
+      line-height: 1.08;
+    }
+
+    .metric-card p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .metric-card.accent {
+      background:
+        linear-gradient(145deg, rgba(185, 129, 23, 0.12), rgba(57, 122, 71, 0.11)),
+        var(--surface);
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .chart-panel,
+    .table-section {
+      padding: 22px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .section-heading p {
+      margin: 0 0 7px;
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .section-tag {
+      flex: 0 0 auto;
+      padding: 7px 10px;
+      color: var(--teal-deep);
+      border: 1px solid #b8d7d2;
+      border-radius: 8px;
+      background: var(--surface-soft);
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .line-chart-wrap {
+      min-height: 310px;
+    }
+
+    svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    .line-chart {
+      width: 100%;
+      min-height: 300px;
+      overflow: visible;
+    }
+
+    .grid-line {
+      stroke: #dfe8e5;
+      stroke-width: 1;
+    }
+
+    .axis-label {
+      fill: #60706d;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .axis-title {
+      fill: #42534f;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 94px 1fr 68px;
+      align-items: center;
+      gap: 10px;
+      min-height: 26px;
+    }
+
+    .bar-label,
+    .bar-value {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .bar-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bar-value {
+      text-align: right;
+    }
+
+    .bar-track {
+      height: 16px;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #e7eeee;
+    }
+
+    .bar-fill {
+      display: block;
+      height: 100%;
+      border-radius: 8px;
+      background: var(--blue);
+    }
+
+    .bar-row:nth-child(3n + 2) .bar-fill {
+      background: var(--green);
+    }
+
+    .bar-row:nth-child(3n) .bar-fill {
+      background: var(--amber);
+    }
+
+    .bar-row.is-match .bar-fill,
+    .bar-row.is-top .bar-fill {
+      background: var(--coral);
+    }
+
+    .table-section {
+      overflow: hidden;
+    }
+
+    .table-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1180px;
+      border-collapse: collapse;
+      background: #ffffff;
+    }
+
+    th,
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th {
+      color: #223c3a;
+      background: #eef6f4;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    thead th:first-child,
+    tbody th,
+    tfoot th {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      text-align: left;
+    }
+
+    tbody th,
+    tfoot th {
+      background: #ffffff;
+    }
+
+    td {
+      color: #263936;
+      font-size: 14px;
+    }
+
+    tbody tr:hover th,
+    tbody tr:hover td {
+      background: #f8fbfa;
+    }
+
+    .match-col {
+      color: #7d351f;
+      background: #fff0ea;
+    }
+
+    tfoot th,
+    tfoot td {
+      font-weight: 900;
+    }
+
+    tfoot tr:first-child th,
+    tfoot tr:first-child td {
+      border-top: 2px solid var(--teal);
+      background: #e7f4f1;
+    }
+
+    tfoot tr:last-child th,
+    tfoot tr:last-child td {
+      background: #fff7e7;
+      color: #6b4c0d;
+    }
+
+    .empty-state {
+      display: grid;
+      min-height: 240px;
+      place-items: center;
+      padding: 24px;
+      color: var(--muted);
+      border: 1px dashed #b6c9c5;
+      border-radius: 8px;
+      background: #f8fbfa;
+      font-size: 14px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .source-note {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    @media (max-width: 960px) {
+      .header-inner {
+        align-items: stretch;
+        flex-direction: column;
+        min-height: auto;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+
+      .filter-inner,
+      .summary-grid,
+      .chart-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .control.search,
+      .chart-panel:first-child,
+      .table-section {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .header-inner,
+      .filter-inner,
+      .dashboard-main {
+        width: min(100% - 20px, 1180px);
+      }
+
+      .filter-band {
+        position: static;
+      }
+
+      .filter-inner,
+      .summary-grid,
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 29px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      .section-heading,
+      .table-meta {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .section-tag {
+        width: fit-content;
+      }
+
+      .metric-card,
+      .chart-panel,
+      .table-section {
+        padding: 16px;
+      }
+
+      .bar-row {
+        grid-template-columns: 82px 1fr 58px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <div class="header-inner">
+      <div>
+        <p class="kicker">해양수산부 유형별 해양사고 현황</p>
+        <h1>유형별 해양사고 현황 대시보드</h1>
+      </div>
+      <div class="period-card" aria-label="데이터 기간">
+        <span>데이터 기간</span>
+        <strong id="dataPeriod">-</strong>
+      </div>
+    </div>
+  </header>
+
+  <section class="filter-band" aria-label="검색 및 필터">
+    <div class="filter-inner">
+      <label class="control" for="startYear">
+        시작 연도
+        <span class="range-line">
+          <input id="startYear" type="range">
+          <output id="startYearValue" for="startYear">-</output>
+        </span>
+      </label>
+      <label class="control" for="endYear">
+        종료 연도
+        <span class="range-line">
+          <input id="endYear" type="range">
+          <output id="endYearValue" for="endYear">-</output>
+        </span>
+      </label>
+      <label class="control search" for="searchInput">
+        텍스트 검색
+        <input id="searchInput" type="search" autocomplete="off" placeholder="연도, 사고 유형, 건수">
+      </label>
+    </div>
+  </section>
+
+  <main class="dashboard-main">
+    <section class="summary-grid" id="summaryCards" aria-label="요약 카드"></section>
+
+    <section class="chart-grid" aria-label="시각화">
+      <article class="chart-panel">
+        <div class="section-heading">
+          <div>
+            <p>Trend</p>
+            <h2>연도별 총 사고 건수 추이</h2>
+          </div>
+          <span class="section-tag" id="trendTag">-</span>
+        </div>
+        <div class="line-chart-wrap" id="lineChart"></div>
+      </article>
+
+      <article class="chart-panel">
+        <div class="section-heading">
+          <div>
+            <p>Type Total</p>
+            <h2>사고 유형별 합계</h2>
+          </div>
+          <span class="section-tag" id="barTag">-</span>
+        </div>
+        <div id="barChart" class="bar-chart"></div>
+      </article>
+    </section>
+
+    <section class="table-section" aria-label="데이터 표">
+      <div class="section-heading">
+        <div>
+          <p>Data Table</p>
+          <h2>CSV 연도별 데이터</h2>
+        </div>
+        <span class="section-tag" id="tableTag">-</span>
+      </div>
+      <div class="table-meta">
+        <span id="filterStatus">-</span>
+        <span>단위: 건</span>
+      </div>
+      <div class="table-wrap" id="tableWrap"></div>
+      <p class="source-note">자료: 1.1해양수산부_유형별 해양사고현황.csv</p>
+    </section>
+  </main>
+
+  <script>
+    const CSV_DATA = `시점,총계,충돌,접촉,좌초,전복,화재/폭발,침몰,행방불명,기관손상,추진기손상,키손상,속구손상,조난,시설물손상,인명사상,안전운항저해,해양오염,기타
+1998,772,147,5,77,14,60,84,4,242,24,10,2,48,4,8,43,0,0
+1999,849,173,2,68,27,67,90,4,269,18,15,2,24,2,13,73,2,0
+2000,634,130,11,58,19,48,63,2,196,8,5,1,23,0,19,51,0,0
+2001,610,141,15,60,21,62,72,1,135,8,6,1,25,1,17,44,1,0
+2002,557,184,13,58,29,42,55,0,110,9,3,0,18,3,20,13,0,0
+2003,531,182,9,65,22,53,50,2,57,12,1,2,21,0,43,12,0,0
+2004,804,210,12,75,35,57,69,1,147,17,12,0,45,1,80,42,1,0
+2005,658,172,10,46,22,71,45,1,166,17,14,0,16,2,34,41,1,0
+2006,657,167,17,66,16,41,25,0,195,11,14,0,11,1,20,68,5,0
+2007,566,148,9,39,21,37,19,1,185,4,17,0,8,1,11,65,1,0
+2008,480,125,15,32,8,25,18,0,145,7,14,0,11,2,17,61,0,0
+2009,723,160,10,43,18,34,22,2,253,16,29,0,16,1,21,96,2,0
+2010,737,174,22,64,17,25,22,0,236,8,24,1,9,4,33,91,7,0
+2011,946,208,23,64,38,57,27,0,261,13,18,1,41,4,82,101,8,0
+2012,726,157,21,53,25,55,26,11,178,7,13,0,44,3,57,68,8,0`;
+
+    const palette = {
+      teal: "#11756f",
+      coral: "#bf5537",
+      blue: "#315fa8",
+      amber: "#b98117"
+    };
+
+    const tableWrap = document.querySelector("#tableWrap");
+    const lineChart = document.querySelector("#lineChart");
+    const barChart = document.querySelector("#barChart");
+    const summaryCards = document.querySelector("#summaryCards");
+    const startYearInput = document.querySelector("#startYear");
+    const endYearInput = document.querySelector("#endYear");
+    const startYearValue = document.querySelector("#startYearValue");
+    const endYearValue = document.querySelector("#endYearValue");
+    const searchInput = document.querySelector("#searchInput");
+    const dataPeriod = document.querySelector("#dataPeriod");
+    const trendTag = document.querySelector("#trendTag");
+    const barTag = document.querySelector("#barTag");
+    const tableTag = document.querySelector("#tableTag");
+    const filterStatus = document.querySelector("#filterStatus");
+
+    const parsed = parseCSV(CSV_DATA);
+    const headers = parsed[0];
+    const records = parsed.slice(1).map((row) => {
+      const item = {};
+      headers.forEach((header, index) => {
+        item[header] = index === 0 ? Number(row[index]) : Number(row[index]);
+      });
+      return item;
+    });
+    const typeColumns = headers.slice(2);
+    const years = records.map((row) => row["시점"]);
+    const minYear = Math.min(...years);
+    const maxYear = Math.max(...years);
+    const state = {
+      startYear: minYear,
+      endYear: maxYear,
+      query: ""
+    };
+
+    setupControls();
+    render();
+
+    function parseCSV(text) {
+      return text.trim().split(/\r?\n/).map((line) => {
+        const cells = [];
+        let cell = "";
+        let quoted = false;
+
+        for (let index = 0; index < line.length; index += 1) {
+          const char = line[index];
+          const next = line[index + 1];
+
+          if (char === "\"" && next === "\"") {
+            cell += "\"";
+            index += 1;
+          } else if (char === "\"") {
+            quoted = !quoted;
+          } else if (char === "," && !quoted) {
+            cells.push(cell);
+            cell = "";
+          } else {
+            cell += char;
+          }
+        }
+
+        cells.push(cell);
+        return cells;
+      });
+    }
+
+    function setupControls() {
+      [startYearInput, endYearInput].forEach((input) => {
+        input.min = minYear;
+        input.max = maxYear;
+        input.step = 1;
+      });
+
+      startYearInput.value = minYear;
+      endYearInput.value = maxYear;
+      dataPeriod.textContent = `${minYear} - ${maxYear}`;
+
+      startYearInput.addEventListener("input", (event) => {
+        state.startYear = Number(event.target.value);
+        if (state.startYear > state.endYear) {
+          state.endYear = state.startYear;
+        }
+        render();
+      });
+
+      endYearInput.addEventListener("input", (event) => {
+        state.endYear = Number(event.target.value);
+        if (state.endYear < state.startYear) {
+          state.startYear = state.endYear;
+        }
+        render();
+      });
+
+      searchInput.addEventListener("input", (event) => {
+        state.query = event.target.value;
+        render();
+      });
+    }
+
+    function render() {
+      syncControls();
+      const query = normalize(state.query);
+      const matchingTypes = getMatchingTypes(query);
+      const rows = getFilteredRows(query, matchingTypes);
+      const typeTotals = getTypeTotals(rows);
+
+      renderSummary(rows, typeTotals);
+      renderLine(rows);
+      renderBars(typeTotals, matchingTypes);
+      renderTable(rows, matchingTypes);
+      updateTags(rows, matchingTypes);
+    }
+
+    function syncControls() {
+      startYearInput.value = state.startYear;
+      endYearInput.value = state.endYear;
+      startYearValue.textContent = state.startYear;
+      endYearValue.textContent = state.endYear;
+    }
+
+    function normalize(value) {
+      return String(value).toLowerCase().replace(/\s+/g, "");
+    }
+
+    function formatNumber(value, digits = 0) {
+      return new Intl.NumberFormat("ko-KR", {
+        maximumFractionDigits: digits,
+        minimumFractionDigits: digits
+      }).format(value);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getMatchingTypes(query) {
+      if (!query) return [];
+      return typeColumns.filter((type) => normalize(type).includes(query));
+    }
+
+    function getFilteredRows(query, matchingTypes) {
+      return records.filter((row) => {
+        const inRange = row["시점"] >= state.startYear && row["시점"] <= state.endYear;
+        if (!inRange) return false;
+        if (!query) return true;
+        if (String(row["시점"]).includes(query) || String(row["총계"]).includes(query)) return true;
+
+        return typeColumns.some((type) => {
+          const typeNameMatches = normalize(type).includes(query) && row[type] > 0;
+          const valueMatches = String(row[type]).includes(query);
+          return typeNameMatches || valueMatches;
+        });
+      });
+    }
+
+    function getTypeTotals(rows) {
+      return typeColumns
+        .map((type) => ({
+          type,
+          value: rows.reduce((sum, row) => sum + row[type], 0)
+        }))
+        .sort((a, b) => b.value - a.value);
+    }
+
+    function renderSummary(rows, typeTotals) {
+      const total = rows.reduce((sum, row) => sum + row["총계"], 0);
+      const average = rows.length ? total / rows.length : 0;
+      const topType = typeTotals[0] || { type: "-", value: 0 };
+      const maxRow = rows.reduce((best, row) => (!best || row["총계"] > best["총계"] ? row : best), null);
+
+      const cards = [
+        {
+          label: "선택 기간 총 사고",
+          value: `${formatNumber(total)}건`,
+          note: `${rows.length}개 연도 기준`
+        },
+        {
+          label: "연평균 사고",
+          value: `${formatNumber(average, 1)}건`,
+          note: "총계 기준 평균"
+        },
+        {
+          label: "최다 사고 유형",
+          value: topType.type,
+          note: `${formatNumber(topType.value)}건`,
+          accent: true
+        },
+        {
+          label: "최다 발생 연도",
+          value: maxRow ? `${maxRow["시점"]}년` : "-",
+          note: maxRow ? `${formatNumber(maxRow["총계"])}건` : "검색 결과 없음"
+        }
+      ];
+
+      summaryCards.innerHTML = cards.map((card) => `
+        <article class="metric-card${card.accent ? " accent" : ""}">
+          <span>${escapeHtml(card.label)}</span>
+          <strong>${escapeHtml(card.value)}</strong>
+          <p>${escapeHtml(card.note)}</p>
+        </article>
+      `).join("");
+    }
+
+    function renderLine(rows) {
+      if (!rows.length) {
+        lineChart.innerHTML = `<div class="empty-state">검색 조건에 맞는 연도별 데이터가 없습니다.</div>`;
+        return;
+      }
+
+      const width = 820;
+      const height = 330;
+      const padding = { top: 24, right: 30, bottom: 54, left: 64 };
+      const innerWidth = width - padding.left - padding.right;
+      const innerHeight = height - padding.top - padding.bottom;
+      const values = rows.map((row) => row["총계"]);
+      const rawMin = Math.min(...values);
+      const rawMax = Math.max(...values);
+      const domainMin = Math.max(0, Math.floor((rawMin * 0.88) / 50) * 50);
+      const domainMax = Math.ceil((rawMax * 1.06) / 50) * 50;
+      const spread = Math.max(domainMax - domainMin, 1);
+      const step = rows.length > 1 ? innerWidth / (rows.length - 1) : innerWidth;
+      const points = rows.map((row, index) => {
+        const x = padding.left + (rows.length > 1 ? index * step : innerWidth / 2);
+        const y = padding.top + innerHeight - ((row["총계"] - domainMin) / spread) * innerHeight;
+        return { x, y, row };
+      });
+      const linePath = points.map((point, index) =>
+        `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`
+      ).join(" ");
+      const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(2)} ${padding.top + innerHeight} L ${padding.left} ${padding.top + innerHeight} Z`;
+      const ticks = Array.from({ length: 5 }, (_, index) => Math.round(domainMin + (spread / 4) * index));
+      const yearLabelStep = rows.length > 8 ? 2 : 1;
+
+      const grid = ticks.map((tick) => {
+        const y = padding.top + innerHeight - ((tick - domainMin) / spread) * innerHeight;
+        return `
+          <line class="grid-line" x1="${padding.left}" x2="${width - padding.right}" y1="${y}" y2="${y}"></line>
+          <text class="axis-label" x="${padding.left - 12}" y="${y + 4}" text-anchor="end">${formatNumber(tick)}</text>
+        `;
+      }).join("");
+
+      const circles = points.map((point, index) => {
+        const showLabel = index === 0 || index === points.length - 1 || index % yearLabelStep === 0;
+        return `
+          <g>
+            <circle cx="${point.x}" cy="${point.y}" r="5" fill="#ffffff" stroke="${palette.teal}" stroke-width="3">
+              <title>${point.row["시점"]}년 ${formatNumber(point.row["총계"])}건</title>
+            </circle>
+            ${showLabel ? `<text class="axis-label" x="${point.x}" y="${height - 18}" text-anchor="middle">${point.row["시점"]}</text>` : ""}
+          </g>
+        `;
+      }).join("");
+
+      lineChart.innerHTML = `
+        <svg class="line-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="연도별 총 사고 건수 추이 선 그래프">
+          <defs>
+            <linearGradient id="totalArea" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="${palette.teal}" stop-opacity="0.26"></stop>
+              <stop offset="100%" stop-color="${palette.teal}" stop-opacity="0.02"></stop>
+            </linearGradient>
+          </defs>
+          ${grid}
+          <path d="${areaPath}" fill="url(#totalArea)"></path>
+          <path d="${linePath}" fill="none" stroke="${palette.teal}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+          ${circles}
+          <text class="axis-title" x="${padding.left}" y="${height - 4}">연도</text>
+          <text class="axis-title" x="14" y="${padding.top}" transform="rotate(-90 14 ${padding.top})">건수</text>
+        </svg>
+      `;
+    }
+
+    function renderBars(typeTotals, matchingTypes) {
+      if (!typeTotals.length || typeTotals.every((item) => item.value === 0)) {
+        barChart.innerHTML = `<div class="empty-state">검색 조건에 맞는 사고 유형 합계가 없습니다.</div>`;
+        return;
+      }
+
+      const topValue = Math.max(...typeTotals.map((item) => item.value), 1);
+      const topType = typeTotals[0].type;
+      const matchSet = new Set(matchingTypes);
+
+      barChart.innerHTML = typeTotals.map((item) => {
+        const width = Math.max((item.value / topValue) * 100, 1.5);
+        const isMatch = matchSet.has(item.type);
+        const isTop = item.type === topType;
+        return `
+          <div class="bar-row${isMatch ? " is-match" : ""}${isTop ? " is-top" : ""}">
+            <span class="bar-label" title="${escapeHtml(item.type)}">${escapeHtml(item.type)}</span>
+            <span class="bar-track" aria-hidden="true">
+              <span class="bar-fill" style="width: ${width.toFixed(2)}%"></span>
+            </span>
+            <span class="bar-value">${formatNumber(item.value)}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderTable(rows, matchingTypes) {
+      if (!rows.length) {
+        tableWrap.innerHTML = `<div class="empty-state">검색 조건에 맞는 표 데이터가 없습니다.</div>`;
+        return;
+      }
+
+      const matchSet = new Set(matchingTypes);
+      const totalRow = {};
+      const averageRow = {};
+
+      headers.forEach((header) => {
+        if (header === "시점") {
+          totalRow[header] = "합계";
+          averageRow[header] = "평균";
+        } else {
+          const total = rows.reduce((sum, row) => sum + row[header], 0);
+          totalRow[header] = total;
+          averageRow[header] = total / rows.length;
+        }
+      });
+
+      const head = `<thead><tr>${headers.map((header) =>
+        `<th class="${matchSet.has(header) ? "match-col" : ""}">${escapeHtml(header === "시점" ? "연도" : header)}</th>`
+      ).join("")}</tr></thead>`;
+
+      const body = `<tbody>${rows.map((row) => `
+        <tr>
+          ${headers.map((header, index) => {
+            const value = row[header];
+            const text = index === 0 ? `${value}` : formatNumber(value);
+            const tag = index === 0 ? "th scope=\"row\"" : "td";
+            return `<${tag} class="${matchSet.has(header) ? "match-col" : ""}">${escapeHtml(text)}</${index === 0 ? "th" : "td"}>`;
+          }).join("")}
+        </tr>
+      `).join("")}</tbody>`;
+
+      const foot = `<tfoot>
+        <tr>${headers.map((header, index) => {
+          const text = index === 0 ? totalRow[header] : formatNumber(totalRow[header]);
+          const tag = index === 0 ? "th scope=\"row\"" : "td";
+          return `<${tag} class="${matchSet.has(header) ? "match-col" : ""}">${escapeHtml(text)}</${index === 0 ? "th" : "td"}>`;
+        }).join("")}</tr>
+        <tr>${headers.map((header, index) => {
+          const text = index === 0 ? averageRow[header] : formatNumber(averageRow[header], 1);
+          const tag = index === 0 ? "th scope=\"row\"" : "td";
+          return `<${tag} class="${matchSet.has(header) ? "match-col" : ""}">${escapeHtml(text)}</${index === 0 ? "th" : "td"}>`;
+        }).join("")}</tr>
+      </tfoot>`;
+
+      tableWrap.innerHTML = `<table>${head}${body}${foot}</table>`;
+    }
+
+    function updateTags(rows, matchingTypes) {
+      const period = `${state.startYear} - ${state.endYear}`;
+      const query = state.query.trim();
+      trendTag.textContent = period;
+      barTag.textContent = matchingTypes.length ? `${matchingTypes.length}개 유형 일치` : "전체 유형";
+      tableTag.textContent = `${rows.length}개 연도`;
+      filterStatus.textContent = query ? `"${query}" 검색 결과` : "전체 데이터";
+    }
+  </script>
+</body>
+</html>
