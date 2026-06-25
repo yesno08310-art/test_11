@@ -1,646 +1,379 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>해양수산 KPI 대시보드</title>
-    <style>
-      :root {
-        --ink: #172033;
-        --muted: #657086;
-        --line: #dbe2ec;
-        --panel: #ffffff;
-        --canvas: #f5f7fb;
-        --header: #14315c;
-        --teal: #0f766e;
-        --blue: #2563eb;
-        --green: #15803d;
-        --amber: #b7791f;
-        --red: #dc2626;
-        --shadow: 0 18px 42px rgba(22, 31, 49, 0.08);
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>해양사고 현황 조회 시스템</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+      background: #f4f6f9;
+      color: #222;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 40px auto;
+      background: #ffffff;
+      border: 1px solid #dde3ec;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(25, 45, 80, 0.08);
+      overflow: hidden;
+    }
+
+    header {
+      padding: 34px 40px;
+      background: linear-gradient(135deg, #12355b, #1f6fb2);
+      color: #ffffff;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 15px;
+    }
+
+    main {
+      padding: 32px 40px 40px;
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+      padding-left: 12px;
+      border-left: 5px solid #1f6fb2;
+      font-size: 20px;
+      color: #12355b;
+    }
+
+    .panel {
+      margin-bottom: 28px;
+      padding: 22px;
+      background: #fbfcfe;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+      color: #34445c;
+    }
+
+    select,
+    input {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: #1f6fb2;
+      box-shadow: 0 0 0 3px rgba(31, 111, 178, 0.12);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .total-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 26px;
+      border-radius: 12px;
+      background: #eef6ff;
+      border: 1px solid #cfe3f8;
+      text-align: center;
+    }
+
+    .total-card span {
+      color: #50627a;
+      font-weight: 700;
+    }
+
+    .total-card strong {
+      margin-top: 8px;
+      color: #12355b;
+      font-size: 38px;
+      line-height: 1.2;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th,
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #e5eaf0;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    th {
+      background: #12355b;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    tbody tr:hover {
+      background: #f7fbff;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .type-table td:first-child,
+    .type-table th:first-child {
+      text-align: left;
+      padding-left: 18px;
+    }
+
+    .highlight {
+      background: #fff1a8 !important;
+      font-weight: 700;
+    }
+
+    .note {
+      margin-top: 10px;
+      color: #667085;
+      font-size: 13px;
+    }
+
+    footer {
+      padding: 18px 40px;
+      border-top: 1px solid #e5eaf0;
+      background: #fafafa;
+      color: #667085;
+      font-size: 13px;
+      text-align: right;
+    }
+
+    @media (max-width: 760px) {
+      .container {
+        margin: 18px;
       }
 
-      * {
-        box-sizing: border-box;
+      header,
+      main,
+      footer {
+        padding-left: 22px;
+        padding-right: 22px;
       }
 
-      html {
-        min-width: 320px;
+      .controls,
+      .summary-grid {
+        grid-template-columns: 1fr;
       }
 
-      body {
-        min-height: 100vh;
-        margin: 0;
-        background:
-          linear-gradient(180deg, #eaf1f8 0, #f5f7fb 260px),
-          var(--canvas);
-        color: var(--ink);
-        font-family:
-          "Malgun Gothic",
-          "Apple SD Gothic Neo",
-          "Noto Sans KR",
-          Arial,
-          sans-serif;
-        letter-spacing: 0;
-      }
-
-      h1,
-      h2,
-      p {
-        margin: 0;
-      }
-
-      .dashboard {
-        width: min(1280px, calc(100% - 32px));
-        margin: 0 auto;
-        padding: 22px 0 30px;
-      }
-
-      .topbar {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 24px;
-        min-height: 106px;
-        padding: 24px;
-        overflow: hidden;
-        background:
-          linear-gradient(135deg, rgba(20, 49, 92, 0.96), rgba(15, 118, 110, 0.9)),
-          #14315c;
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        border-radius: 8px;
-        box-shadow: var(--shadow);
-        color: #ffffff;
-      }
-
-      .title-block {
-        min-width: 0;
-      }
-
-      .eyebrow,
-      .panel-kicker {
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .eyebrow {
-        margin-bottom: 8px;
-        color: #c7e7ff;
-      }
-
-      h1 {
-        font-size: clamp(24px, 3vw, 34px);
-        line-height: 1.2;
-      }
-
-      .meta {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: 8px;
-        color: #eaf7ff;
+      table {
         font-size: 13px;
-        font-weight: 700;
       }
 
-      .meta span {
-        min-height: 30px;
-        padding: 7px 11px;
-        border: 1px solid rgba(234, 247, 255, 0.35);
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.1);
-        white-space: nowrap;
+      th,
+      td {
+        padding: 9px 6px;
       }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>해양사고 현황 조회 시스템</h1>
+      <p>연도별·유형별 해양사고 발생 현황을 조회하는 정적 웹 대시보드</p>
+    </header>
 
-      .kpi-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
-        margin-top: 14px;
-      }
-
-      .kpi-card,
-      .panel {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        box-shadow: 0 12px 30px rgba(20, 37, 63, 0.06);
-      }
-
-      .kpi-card {
-        display: grid;
-        gap: 10px;
-        min-height: 130px;
-        padding: 16px;
-        border-top: 4px solid var(--accent);
-      }
-
-      .kpi-label {
-        color: var(--muted);
-        font-size: 14px;
-        font-weight: 800;
-      }
-
-      .kpi-value {
-        color: var(--ink);
-        font-size: clamp(25px, 3vw, 34px);
-        font-weight: 900;
-        line-height: 1.05;
-      }
-
-      .kpi-note {
-        align-self: end;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.4;
-      }
-
-      .content-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-        margin-top: 14px;
-      }
-
-      .panel {
-        min-width: 0;
-        overflow: hidden;
-      }
-
-      .wide-panel {
-        grid-column: 1 / -1;
-      }
-
-      .panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        min-height: 60px;
-        padding: 13px 16px;
-        border-bottom: 1px solid var(--line);
-        background: #eef3f8;
-      }
-
-      .panel-kicker {
-        margin-bottom: 4px;
-        color: #64748b;
-      }
-
-      .panel-header h2 {
-        font-size: 18px;
-        line-height: 1.25;
-      }
-
-      .panel-header span {
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 800;
-        white-space: nowrap;
-      }
-
-      .chart {
-        min-height: 326px;
-        padding: 14px 14px 12px;
-      }
-
-      .chart-wide {
-        min-height: 338px;
-      }
-
-      .chart svg {
-        display: block;
-        width: 100%;
-        height: 100%;
-        min-height: 300px;
-      }
-
-      .grid-line {
-        stroke: #dde5ef;
-        stroke-dasharray: 4 5;
-      }
-
-      .axis-line {
-        stroke: #9aa7b8;
-      }
-
-      .tick-label {
-        fill: #5f6c81;
-        font-size: 11px;
-      }
-
-      .bar-label,
-      .point-label {
-        fill: var(--ink);
-        font-size: 12px;
-        font-weight: 800;
-      }
-
-      .area-fill {
-        fill: rgba(37, 99, 235, 0.12);
-      }
-
-      @media (max-width: 980px) {
-        .topbar {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .meta {
-          justify-content: flex-start;
-        }
-
-        .kpi-grid,
-        .content-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      @media (max-width: 680px) {
-        .dashboard {
-          width: min(100% - 20px, 1280px);
-          padding-top: 10px;
-        }
-
-        .topbar {
-          min-height: 0;
-          padding: 18px;
-        }
-
-        .kpi-grid,
-        .content-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .panel-header {
-          align-items: flex-start;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .panel-header span,
-        .meta span {
-          white-space: normal;
-        }
-
-        .chart,
-        .chart-wide {
-          min-height: 286px;
-          padding: 10px;
-        }
-
-        .chart svg {
-          min-height: 266px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <main class="dashboard">
-      <header class="topbar">
-        <div class="title-block">
-          <p class="eyebrow">ocean_fisheries_sample_300_cp949.csv</p>
-          <h1>해양수산 KPI 대시보드</h1>
+    <main>
+      <section class="panel">
+        <h2 class="section-title">조회 조건</h2>
+        <div class="controls">
+          <div>
+            <label for="yearSelect">연도 선택</label>
+            <select id="yearSelect"></select>
+          </div>
+          <div>
+            <label for="yearSearch">연도 검색</label>
+            <input id="yearSearch" type="text" placeholder="예: 2008" />
+          </div>
         </div>
-        <div class="meta" aria-label="데이터 요약">
-          <span id="periodLabel"></span>
-          <span id="recordLabel"></span>
+        <p class="note">연도를 선택하면 해당 연도의 사고유형별 건수가 표시되며, 검색한 연도는 전체 현황 표에서 강조됩니다.</p>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">사고유형별 현황</h2>
+        <div class="summary-grid">
+          <table class="type-table">
+            <thead>
+              <tr>
+                <th>사고유형</th>
+                <th>건수</th>
+              </tr>
+            </thead>
+            <tbody id="typeTableBody"></tbody>
+          </table>
+          <div class="total-card">
+            <span id="selectedYearLabel">선택 연도 총 사고건수</span>
+            <strong id="totalCount">0건</strong>
+          </div>
         </div>
-      </header>
+      </section>
 
-      <section class="kpi-grid" id="kpiGrid" aria-label="주요 KPI"></section>
-
-      <section class="content-grid" aria-label="상세 지표">
-        <article class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="panel-kicker">TOP 5</p>
-              <h2>항만별 위판금액</h2>
-            </div>
-            <span>USD</span>
-          </div>
-          <div id="topPortsChart" class="chart" aria-label="항만별 위판금액 TOP 5 차트"></div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="panel-kicker">SAFETY</p>
-              <h2>기상위험도별 사고 건수</h2>
-            </div>
-            <span>건수</span>
-          </div>
-          <div id="riskIncidentChart" class="chart" aria-label="기상위험도별 안전사고 건수 비교 차트"></div>
-        </article>
-
-        <article class="panel wide-panel">
-          <div class="panel-header">
-            <div>
-              <p class="panel-kicker">MONTHLY</p>
-              <h2>월별 수출액 추이</h2>
-            </div>
-            <span>2024.01 - 2025.12</span>
-          </div>
-          <div id="monthlyExportChart" class="chart chart-wide" aria-label="월별 수출액 추이 차트"></div>
-        </article>
+      <section class="panel">
+        <h2 class="section-title">전체 연도 현황</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>연도</th>
+              <th>총계</th>
+              <th>충돌</th>
+              <th>접촉</th>
+              <th>좌초</th>
+              <th>전복</th>
+              <th>화재폭발</th>
+              <th>침몰</th>
+              <th>기관손상</th>
+            </tr>
+          </thead>
+          <tbody id="allTableBody"></tbody>
+        </table>
       </section>
     </main>
-    <script>
-      const dashboardData = {
-        period: "2024-01-03 ~ 2025-12-28",
-        records: 300,
-        metrics: [
-          {
-            label: "총 어획량",
-            value: 912.36,
-            suffix: "톤",
-            format: "decimal",
-            note: "catch_tons 합계",
-            accent: "#0f766e",
-          },
-          {
-            label: "총 수출액",
-            value: 1319524,
-            suffix: "USD",
-            format: "currency",
-            note: "export_value_usd 합계",
-            accent: "#2563eb",
-          },
-          {
-            label: "평균 만족도",
-            value: 75.55,
-            suffix: "점",
-            format: "decimal",
-            note: "public_satisfaction_score 평균",
-            accent: "#b7791f",
-          },
-          {
-            label: "총 안전사고 건수",
-            value: 141,
-            suffix: "건",
-            format: "integer",
-            note: "safety_incident_count 합계",
-            accent: "#dc2626",
-          },
-        ],
-        topPorts: [
-          { label: "앵커리지", value: 501792 },
-          { label: "홋카이도", value: 390339 },
-          { label: "시애틀", value: 382311 },
-          { label: "보스턴", value: 380366 },
-          { label: "샌디에이고", value: 322047 },
-        ],
-        monthlyExport: [
-          { label: "2024-01", value: 50952 },
-          { label: "2024-02", value: 43649 },
-          { label: "2024-03", value: 66201 },
-          { label: "2024-04", value: 49830 },
-          { label: "2024-05", value: 53460 },
-          { label: "2024-06", value: 50691 },
-          { label: "2024-07", value: 65898 },
-          { label: "2024-08", value: 73675 },
-          { label: "2024-09", value: 59014 },
-          { label: "2024-10", value: 50639 },
-          { label: "2024-11", value: 56582 },
-          { label: "2024-12", value: 43474 },
-          { label: "2025-01", value: 34910 },
-          { label: "2025-02", value: 47598 },
-          { label: "2025-03", value: 58793 },
-          { label: "2025-04", value: 60736 },
-          { label: "2025-05", value: 68591 },
-          { label: "2025-06", value: 75992 },
-          { label: "2025-07", value: 54657 },
-          { label: "2025-08", value: 57325 },
-          { label: "2025-09", value: 53006 },
-          { label: "2025-10", value: 60214 },
-          { label: "2025-11", value: 43860 },
-          { label: "2025-12", value: 39777 },
-        ],
-        riskIncidents: [
-          { label: "Low", value: 38, records: 95 },
-          { label: "Medium", value: 79, records: 171 },
-          { label: "High", value: 24, records: 34 },
-        ],
-      };
 
-      const formatters = {
-        currency: (value) => `$${Math.round(value).toLocaleString("en-US")}`,
-        integer: (value) => Math.round(value).toLocaleString("ko-KR"),
-        decimal: (value) =>
-          value.toLocaleString("ko-KR", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }),
-      };
+    <footer>
+      해양수산부 정보화 담당관 · 1998년~2012년 해양사고 현황
+    </footer>
+  </div>
 
-      function escapeHtml(value) {
-        return String(value)
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
-      }
+  <script>
+    const accidentData = [
+      { year: 1998, total: 772, collision: 147, contact: 5, grounding: 77, capsize: 14, fire: 60, sinking: 84, engine: 242 },
+      { year: 1999, total: 849, collision: 173, contact: 2, grounding: 68, capsize: 27, fire: 67, sinking: 90, engine: 269 },
+      { year: 2000, total: 634, collision: 130, contact: 11, grounding: 58, capsize: 19, fire: 48, sinking: 63, engine: 196 },
+      { year: 2001, total: 610, collision: 141, contact: 15, grounding: 60, capsize: 21, fire: 62, sinking: 72, engine: 135 },
+      { year: 2002, total: 557, collision: 184, contact: 13, grounding: 58, capsize: 29, fire: 42, sinking: 55, engine: 110 },
+      { year: 2003, total: 531, collision: 182, contact: 9, grounding: 65, capsize: 22, fire: 53, sinking: 50, engine: 57 },
+      { year: 2004, total: 804, collision: 210, contact: 12, grounding: 75, capsize: 35, fire: 57, sinking: 69, engine: 147 },
+      { year: 2005, total: 658, collision: 172, contact: 10, grounding: 46, capsize: 22, fire: 71, sinking: 45, engine: 166 },
+      { year: 2006, total: 657, collision: 167, contact: 17, grounding: 66, capsize: 16, fire: 41, sinking: 25, engine: 195 },
+      { year: 2007, total: 566, collision: 148, contact: 9, grounding: 39, capsize: 21, fire: 37, sinking: 19, engine: 185 },
+      { year: 2008, total: 480, collision: 125, contact: 15, grounding: 32, capsize: 8, fire: 25, sinking: 18, engine: 145 },
+      { year: 2009, total: 723, collision: 160, contact: 10, grounding: 43, capsize: 18, fire: 34, sinking: 22, engine: 253 },
+      { year: 2010, total: 737, collision: 174, contact: 22, grounding: 64, capsize: 17, fire: 25, sinking: 22, engine: 236 },
+      { year: 2011, total: 946, collision: 208, contact: 23, grounding: 64, capsize: 38, fire: 57, sinking: 27, engine: 261 },
+      { year: 2012, total: 726, collision: 157, contact: 21, grounding: 53, capsize: 25, fire: 55, sinking: 26, engine: 178 }
+    ];
 
-      function formatValue(value, kind = "integer") {
-        return (formatters[kind] || formatters.integer)(value);
-      }
+    const typeLabels = [
+      { key: "collision", label: "충돌" },
+      { key: "contact", label: "접촉" },
+      { key: "grounding", label: "좌초" },
+      { key: "capsize", label: "전복" },
+      { key: "fire", label: "화재폭발" },
+      { key: "sinking", label: "침몰" },
+      { key: "engine", label: "기관손상" }
+    ];
 
-      function niceMax(value) {
-        if (value <= 0) return 1;
-        const exponent = Math.floor(Math.log10(value));
-        const base = 10 ** exponent;
-        return Math.ceil(value / base) * base;
-      }
+    const yearSelect = document.getElementById("yearSelect");
+    const yearSearch = document.getElementById("yearSearch");
+    const typeTableBody = document.getElementById("typeTableBody");
+    const allTableBody = document.getElementById("allTableBody");
+    const totalCount = document.getElementById("totalCount");
+    const selectedYearLabel = document.getElementById("selectedYearLabel");
 
-      function svgText(x, y, text, className = "tick-label", extra = "") {
-        return `<text x="${x}" y="${y}" class="${className}" ${extra}>${escapeHtml(text)}</text>`;
-      }
+    function initYearOptions() {
+      accidentData.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.year;
+        option.textContent = item.year + "년";
+        yearSelect.appendChild(option);
+      });
+      yearSelect.value = 2012;
+    }
 
-      function renderMeta() {
-        document.querySelector("#periodLabel").textContent = `기간 ${dashboardData.period}`;
-        document.querySelector("#recordLabel").textContent = `레코드 ${dashboardData.records.toLocaleString("ko-KR")}건`;
-      }
+    function renderTypeTable(year) {
+      const selectedData = accidentData.find(item => item.year === Number(year));
+      typeTableBody.innerHTML = "";
 
-      function renderKpis() {
-        const grid = document.querySelector("#kpiGrid");
-        grid.innerHTML = dashboardData.metrics
-          .map(
-            (metric) => `
-              <article class="kpi-card" style="--accent: ${metric.accent}">
-                <div class="kpi-label">${escapeHtml(metric.label)}</div>
-                <div class="kpi-value">${formatValue(metric.value, metric.format)}</div>
-                <div class="kpi-note">${escapeHtml(metric.suffix)} · ${escapeHtml(metric.note)}</div>
-              </article>
-            `,
-          )
-          .join("");
-      }
+      typeLabels.forEach(type => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${type.label}</td><td>${selectedData[type.key].toLocaleString()}건</td>`;
+        typeTableBody.appendChild(row);
+      });
 
-      function renderHorizontalBarChart(target, data) {
-        const width = 760;
-        const height = 320;
-        const margin = { top: 18, right: 106, bottom: 38, left: 88 };
-        const plotW = width - margin.left - margin.right;
-        const plotH = height - margin.top - margin.bottom;
-        const max = niceMax(Math.max(...data.map((d) => d.value)));
-        const rowH = plotH / data.length;
+      selectedYearLabel.textContent = selectedData.year + "년 총 사고건수";
+      totalCount.textContent = selectedData.total.toLocaleString() + "건";
+    }
 
-        const grid = [0, 0.25, 0.5, 0.75, 1]
-          .map((tick) => {
-            const x = margin.left + tick * plotW;
-            return `
-              <line x1="${x}" y1="${margin.top}" x2="${x}" y2="${margin.top + plotH}" class="grid-line"></line>
-              ${svgText(x, height - 10, formatValue(max * tick, "currency"), "tick-label", 'text-anchor="middle"')}
-            `;
-          })
-          .join("");
+    function renderAllTable() {
+      const searchYear = yearSearch.value.trim();
+      allTableBody.innerHTML = "";
 
-        const rows = data
-          .map((d, i) => {
-            const y = margin.top + i * rowH + 13;
-            const barH = Math.max(22, rowH - 18);
-            const barW = (d.value / max) * plotW;
-            const labelY = y + barH / 2 + 4;
+      accidentData.forEach(item => {
+        const row = document.createElement("tr");
+        if (searchYear !== "" && String(item.year) === searchYear) {
+          row.classList.add("highlight");
+        }
 
-            return `
-              <title>${escapeHtml(`${d.label}: ${formatValue(d.value, "currency")}`)}</title>
-              ${svgText(margin.left - 12, labelY, d.label, "tick-label", 'text-anchor="end"')}
-              <rect x="${margin.left}" y="${y}" width="${barW}" height="${barH}" rx="5" fill="#0f766e"></rect>
-              ${svgText(margin.left + barW + 10, labelY, formatValue(d.value, "currency"), "bar-label")}
-            `;
-          })
-          .join("");
-
-        target.innerHTML = `
-          <svg viewBox="0 0 ${width} ${height}" role="img">
-            ${grid}
-            <line x1="${margin.left}" y1="${margin.top + plotH}" x2="${margin.left + plotW}" y2="${margin.top + plotH}" class="axis-line"></line>
-            ${rows}
-          </svg>
+        row.innerHTML = `
+          <td>${item.year}</td>
+          <td>${item.total}</td>
+          <td>${item.collision}</td>
+          <td>${item.contact}</td>
+          <td>${item.grounding}</td>
+          <td>${item.capsize}</td>
+          <td>${item.fire}</td>
+          <td>${item.sinking}</td>
+          <td>${item.engine}</td>
         `;
-      }
+        allTableBody.appendChild(row);
+      });
+    }
 
-      function renderVerticalBarChart(target, data) {
-        const width = 760;
-        const height = 320;
-        const margin = { top: 22, right: 34, bottom: 42, left: 62 };
-        const plotW = width - margin.left - margin.right;
-        const plotH = height - margin.top - margin.bottom;
-        const max = niceMax(Math.max(...data.map((d) => d.value)));
-        const slot = plotW / data.length;
-        const colors = { Low: "#15803d", Medium: "#b7791f", High: "#dc2626" };
+    yearSelect.addEventListener("change", () => {
+      renderTypeTable(yearSelect.value);
+    });
 
-        const grid = [0, 0.25, 0.5, 0.75, 1]
-          .map((tick) => {
-            const y = margin.top + plotH - tick * plotH;
-            return `
-              <line x1="${margin.left}" y1="${y}" x2="${margin.left + plotW}" y2="${y}" class="grid-line"></line>
-              ${svgText(margin.left - 10, y + 4, Math.round(max * tick), "tick-label", 'text-anchor="end"')}
-            `;
-          })
-          .join("");
+    yearSearch.addEventListener("input", () => {
+      renderAllTable();
+    });
 
-        const bars = data
-          .map((d, i) => {
-            const barW = Math.min(112, slot * 0.38);
-            const x = margin.left + i * slot + (slot - barW) / 2;
-            const barH = (d.value / max) * plotH;
-            const y = margin.top + plotH - barH;
-            const center = x + barW / 2;
-
-            return `
-              <title>${escapeHtml(`${d.label}: 사고 ${d.value}건, 레코드 ${d.records}건`)}</title>
-              <rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="5" fill="${colors[d.label]}"></rect>
-              ${svgText(center, y - 9, `${d.value}건`, "bar-label", 'text-anchor="middle"')}
-              ${svgText(center, height - 17, d.label, "tick-label", 'text-anchor="middle"')}
-            `;
-          })
-          .join("");
-
-        target.innerHTML = `
-          <svg viewBox="0 0 ${width} ${height}" role="img">
-            ${grid}
-            <line x1="${margin.left}" y1="${margin.top + plotH}" x2="${margin.left + plotW}" y2="${margin.top + plotH}" class="axis-line"></line>
-            ${bars}
-          </svg>
-        `;
-      }
-
-      function renderLineChart(target, data) {
-        const width = 1200;
-        const height = 340;
-        const margin = { top: 26, right: 36, bottom: 58, left: 78 };
-        const plotW = width - margin.left - margin.right;
-        const plotH = height - margin.top - margin.bottom;
-        const max = niceMax(Math.max(...data.map((d) => d.value)));
-        const min = Math.min(...data.map((d) => d.value));
-        const xStep = plotW / (data.length - 1);
-        const valueRange = max - min * 0.8;
-        const yBase = min * 0.8;
-
-        const points = data.map((d, i) => {
-          const x = margin.left + i * xStep;
-          const y = margin.top + plotH - ((d.value - yBase) / valueRange) * plotH;
-          return { x, y, ...d };
-        });
-        const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-        const areaPath = `${linePath} L ${margin.left + plotW} ${margin.top + plotH} L ${margin.left} ${margin.top + plotH} Z`;
-        const maxPoint = points.reduce((best, point) => (point.value > best.value ? point : best), points[0]);
-
-        const grid = [0, 0.25, 0.5, 0.75, 1]
-          .map((tick) => {
-            const y = margin.top + plotH - tick * plotH;
-            const value = yBase + valueRange * tick;
-            return `
-              <line x1="${margin.left}" y1="${y}" x2="${margin.left + plotW}" y2="${y}" class="grid-line"></line>
-              ${svgText(margin.left - 12, y + 4, formatValue(value, "currency"), "tick-label", 'text-anchor="end"')}
-            `;
-          })
-          .join("");
-
-        const labels = data
-          .map((d, i) => {
-            if (i % 2 !== 0 && i !== data.length - 1) return "";
-            const x = margin.left + i * xStep;
-            return svgText(x, height - 18, d.label.slice(2), "tick-label", `text-anchor="middle" transform="rotate(-45 ${x} ${height - 18})"`);
-          })
-          .join("");
-
-        const markers = points
-          .map((p) => {
-            const isImportant = p === maxPoint || p.label.endsWith("-12") || p.label.endsWith("-01");
-            return `
-              <circle cx="${p.x}" cy="${p.y}" r="${isImportant ? 4.5 : 2.7}" fill="#2563eb"></circle>
-              <title>${escapeHtml(`${p.label}: ${formatValue(p.value, "currency")}`)}</title>
-            `;
-          })
-          .join("");
-
-        target.innerHTML = `
-          <svg viewBox="0 0 ${width} ${height}" role="img">
-            ${grid}
-            <path d="${areaPath}" class="area-fill"></path>
-            <path d="${linePath}" fill="none" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path>
-            ${markers}
-            ${svgText(maxPoint.x + 8, maxPoint.y - 10, `최고 ${formatValue(maxPoint.value, "currency")}`, "point-label")}
-            <line x1="${margin.left}" y1="${margin.top + plotH}" x2="${margin.left + plotW}" y2="${margin.top + plotH}" class="axis-line"></line>
-            ${labels}
-          </svg>
-        `;
-      }
-
-      function renderCharts() {
-        renderHorizontalBarChart(document.querySelector("#topPortsChart"), dashboardData.topPorts);
-        renderVerticalBarChart(document.querySelector("#riskIncidentChart"), dashboardData.riskIncidents);
-        renderLineChart(document.querySelector("#monthlyExportChart"), dashboardData.monthlyExport);
-      }
-
-      renderMeta();
-      renderKpis();
-      renderCharts();
-    </script>
-  </body>
+    initYearOptions();
+    renderTypeTable(yearSelect.value);
+    renderAllTable();
+  </script>
+</body>
 </html>
